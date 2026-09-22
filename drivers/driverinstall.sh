@@ -477,10 +477,11 @@ do_install() {
     # 5. Fix autoconf.h if needed
     fix_autoconf || true
 
-    # 6. DKMS build
+    # 6. DKMS build (stderr kept visible — users need the real error)
     info "Building modules..."
-    if ! dkms build "${PACKAGE}/${VERSION}" 2>/dev/null; then
+    if ! dkms build "${PACKAGE}/${VERSION}"; then
         # Retry with autoconf fix if it failed
+        warn "dkms build failed — seeding autoconf.h from .config and retrying..."
         fix_autoconf
         dkms build "${PACKAGE}/${VERSION}"
     fi
