@@ -65,5 +65,5 @@ those drivers — curated for the Colorful Evol P15 — alongside the `cctl` too
 
 The driver code in this repository is licensed under
 **[GPL-2.0-or-later](https://www.gnu.org/licenses/old-licenses/gpl-2.0.html)** — see
-[`drivers/LICENSE`](./drivers/LICENSE) for details. The MIT license that covers the
+[`LICENSE`](./LICENSE) for details. The MIT license that covers the
 `cctl` tool itself does **not** apply to the files under `drivers/`.
