@@ -24,7 +24,7 @@ Every GitHub **release of cctl** attaches this same `drivers.tar.gz` (fetched st
 from here, never rebuilt), so binary + matching drivers are always available from one
 place: https://github.com/bhusann/cctl/releases
 
-## How `cctl` consumes this repo
+## How `cctl` uses this repo
 
 `cctl drivers-install` downloads the tarball (or uses one placed beside the binary),
 verifies it against a **sha256 baked into the cctl binary** *before* extraction, and
@@ -44,8 +44,7 @@ Because of that pin, whenever anything under `drivers/` changes here:
 ### Via cctl (recommended)
 
 ```bash
-sudo cctl drivers-install     # resolves/verifies sources itself
-sudo cctl drivers-install     # interactive menu also offers uninstall
+sudo cctl drivers-manage     # interactive menu offers install and uninstall
 ```
 
 ### Direct (bypass cctl)
