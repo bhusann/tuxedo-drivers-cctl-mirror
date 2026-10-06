@@ -266,7 +266,7 @@ print_status() {
     echo
     info "Raw lsmod input the script checks (runs: lsmod | grep '^<module> '):"
     for m in "${MODULES[@]}"; do
-        line="$(echo "$lsmod_out" | grep "^${m}[[:space:]]")"
+        line="$(echo "$lsmod_out" | grep "^${m}[[:space:]]")" || true
         if [ -n "$line" ]; then
             echo "    $line"
         else
