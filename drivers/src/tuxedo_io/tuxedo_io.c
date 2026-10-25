@@ -36,7 +36,7 @@
 
 MODULE_DESCRIPTION("Hardware interface for TUXEDO laptops");
 MODULE_AUTHOR("TUXEDO Computers GmbH <tux@tuxedocomputers.com>");
-MODULE_VERSION("0.3.9");
+MODULE_VERSION("0.3.10");
 MODULE_LICENSE("GPL");
 
 MODULE_ALIAS_CLEVO_INTERFACES();
@@ -47,10 +47,15 @@ MODULE_ALIAS("wmi:" UNIWILL_WMI_MGMT_GUID_BC);
 
 #define NB01_FAN_SPEED_MAX 0xff
 #define FAN_ON_MIN_SPEED_PERCENT 25
+#define CLEVO_FAN_AUTO_ALL 0x0f
+#define CLEVO_FAN_AUTO_ON_CLOSE_FLAG ((void *)1UL)
 
 // Initialized in module init, global for ioctl interface
 static u32 id_check_clevo;
 static u32 id_check_uniwill;
+
+/* Last profile written through this module; firmware and Fn-key changes are invisible. */
+static int32_t last_clevo_perf_profile = -1;
 
 static struct uniwill_device_features_t *uw_feats;
 
@@ -282,6 +287,23 @@ static int fop_release(struct inode *inode, struct file *file)
 	return 0;
 }*/
 
+/* Only explicitly armed file descriptions restore fans when their last fd closes. */
+static int fop_release(struct inode *inode, struct file *file)
+{
+	u32 result;
+	int status;
+
+	if (file->private_data == CLEVO_FAN_AUTO_ON_CLOSE_FLAG) {
+		status = clevo_evaluate_method(CLEVO_CMD_SET_FANSPEED_AUTO,
+					       CLEVO_FAN_AUTO_ALL, &result);
+		if (status)
+			pr_warn("fan auto on close returned %d, fans may not be restored\n", status);
+		else
+			pr_info("armed fd closed, fans restored to EC auto\n");
+	}
+	return 0;
+}
+
 static long clevo_ioctl_interface(struct file *file, unsigned int cmd, unsigned long arg)
 {
 	u32 result = 0, status;
@@ -334,6 +356,11 @@ static long clevo_ioctl_interface(struct file *file, unsigned int cmd, unsigned 
 			status = clevo_evaluate_method(CLEVO_CMD_GET_TOUCHPAD_SW, 0, &result);
 			copy_result = copy_to_user((int32_t *) arg, &result, sizeof(result));
 			break;
+		case R_CL_PERF_PROFILE: {
+			int32_t profile = READ_ONCE(last_clevo_perf_profile);
+			copy_result = copy_to_user((int32_t *) arg, &profile, sizeof(profile));
+			break;
+		}
 	}
 
 	switch (cmd) {
@@ -387,7 +414,14 @@ static long clevo_ioctl_interface(struct file *file, unsigned int cmd, unsigned 
 		case W_CL_PERF_PROFILE:
 			copy_result = copy_from_user(&argument, (int32_t *) arg, sizeof(argument));
 			clevo_arg = (CLEVO_CMD_OPT_SUB_SET_PERF_PROF << 0x18) | (argument & 0xff);
-			clevo_evaluate_method(CLEVO_CMD_OPT, clevo_arg, &result);
+			status = clevo_evaluate_method(CLEVO_CMD_OPT, clevo_arg, &result);
+			if (!status)
+				WRITE_ONCE(last_clevo_perf_profile, (int32_t)(argument & 0xff));
+			break;
+		case W_CL_FAN_AUTO_ON_CLOSE:
+			if (!id_check_clevo)
+				return -ENODEV;
+			file->private_data = CLEVO_FAN_AUTO_ON_CLOSE_FLAG;
 			break;
 	}
 
@@ -762,9 +796,9 @@ static long fop_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 
 static struct file_operations fops_dev = {
 	.owner              = THIS_MODULE,
-	.unlocked_ioctl     = fop_ioctl
+	.unlocked_ioctl     = fop_ioctl,
 //	.open               = fop_open,
-//	.release            = fop_release
+	.release            = fop_release
 };
 
 struct class *tuxedo_io_device_class;

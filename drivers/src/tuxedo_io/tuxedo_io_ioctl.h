@@ -29,7 +29,7 @@
 #define MAGIC_READ_UW	IOCTL_MAGIC + 3
 #define MAGIC_WRITE_UW	IOCTL_MAGIC + 4
 
-#define MOD_API_MIN_VERSION "0.2.6" // IMPORTANT: Needs to be updated when a new ioctl is added
+#define MOD_API_MIN_VERSION "0.3.10" // IMPORTANT: Needs to be updated when a new ioctl is added
 
 // General
 #define R_MOD_VERSION		_IOR(IOCTL_MAGIC, 0x00, char*)
@@ -52,6 +52,8 @@
 #define R_CL_FLIGHTMODE_SW	_IOR(MAGIC_READ_CL, 0x14, int32_t*)
 #define R_CL_TOUCHPAD_SW	_IOR(MAGIC_READ_CL, 0x15, int32_t*)
 
+#define R_CL_PERF_PROFILE		_IOR(MAGIC_READ_CL, 0x16, int32_t*)
+
 #ifdef DEBUG
 #define R_TF_BC			_IOW(MAGIC_READ_CL, 0x91, uint32_t*)
 #endif
@@ -64,6 +66,8 @@
 #define W_CL_FLIGHTMODE_SW	_IOW(MAGIC_WRITE_CL, 0x13, int32_t*)
 #define W_CL_TOUCHPAD_SW	_IOW(MAGIC_WRITE_CL, 0x14, int32_t*)
 #define W_CL_PERF_PROFILE	_IOW(MAGIC_WRITE_CL, 0x15, int32_t*)
+
+#define W_CL_FAN_AUTO_ON_CLOSE	_IO(MAGIC_WRITE_CL, 0x16)
 
 #ifdef DEBUG
 #define W_TF_BC			_IOW(MAGIC_WRITE_CL, 0x91, uint32_t*)
